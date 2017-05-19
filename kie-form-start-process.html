@@ -1,0 +1,113 @@
+<!--
+******* Author: Serhii Pahuta
+******* This code is a part of master's thesis: Polymer Elements for a Business Process Management System
+******* 2017 Brno
+-->
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../kie-server-execute/kie-server-execute.html">
+<link rel="import" href="../kie-form/kie-form.html">
+
+<dom-module id="kie-form-start-process">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <kie-server-execute
+     id="kieServer"
+     op="[[getFormUrl]]"
+     username="[[user.userId]]"
+     password="[[user.password]]"
+     response="{{processForm}}"
+     server-url="{{serverUrl}}"></kie-server-execute>
+
+    <kie-form
+     id="kieForm"
+     user="[[user]]"
+     url="[[startProcessUrl]]"
+     form-data="[[procFormData]]"
+     button-name="[[buttonName]]"
+     hide-button="[[hideButton]]"></kie-form>
+  </template>
+
+  <script>
+      class KieFormStartProcess extends Polymer.Element {
+        static get is() {return 'kie-form-start-process';}
+
+        static get properties() {
+            return {
+                user: {
+                    type: Object
+                },
+                container: {
+                    type: String
+                },
+                processId: {
+                    type: String
+                },
+                serverUrl: {
+                    type: String
+                },
+                getFormUrl: {
+                    type: String
+                },
+                startProcessUrl: {
+                    type: String
+                },
+                processForm: {
+                    type: Object,
+                    observer: "_formDataReady"
+                },
+                procFormData: {
+                    type: Object
+                },
+                buttonName: {
+                    type: String,
+                    value: 'Start Process'
+                },
+                hideButton: {
+                    type: Boolean,
+                    value: false
+                },
+                noInit: {
+                    type:Boolean,
+                    value: false
+                }
+            };
+        }
+
+        ready() {
+            super.ready();
+            if (!this.noInit) {
+                this.fetchProcessForms();
+            }
+        }
+
+        _formDataReady() {
+            if (this.processForm) {
+            let temp = this.processForm["0"];
+                for(let i=0;i<temp.fields.length;i++) {
+                    temp.fields[i].innerData = "";
+                }
+                this.set("procFormData", temp);
+            }
+        }
+
+        startProcess() {
+            this.$.kieForm.submitForm();
+        }
+
+        fetchProcessForms() {
+            this.getFormUrl = "containers/" + this.container + "/forms/processes/" + this.processId;
+            this.startProcessUrl = this.serverUrl + "containers/" + this.container + "/processes/" + this.processId + "/instances";
+            this.$.kieServer.execute();
+        }
+      }
+
+      customElements.define(KieFormStartProcess.is,KieFormStartProcess);
+    
+  </script>
+
+</dom-module>
